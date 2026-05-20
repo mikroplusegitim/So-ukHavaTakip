@@ -24,12 +24,17 @@
 - Uyarı paneli (severity bazlı: critical/warning/info) + tekil/toplu onay
 - Yapay Zeka Analizi (Claude Sonnet 4.5, son 60 kayıt + aktif uyarılar)
 - Eşik ayarları dialog (sıcaklık/nem min-hedef-max düzenleme)
-- Yeni depo oluşturma dialog
-- Depo silme (onaylı)
+- Yeni depo oluşturma dialog + silme (onaylı)
 - Sessize alma (görsel uyarılar devam eder)
 - Çoklu depo sidebar rail (status dot: cyan=online, red=power cut)
 - Polling 2.5s, simülasyon tick 4s
 - Power restored event → power_cut auto-acknowledge
+- **Sinematik karşılama sayfası** (`/`): editorial hero, canlı önizleme kartı, özellikler, misyon, son CTA
+- **IoT HTTP webhook** (`POST /api/ingest/{wid}` + per-warehouse `api_key`, header veya body auth, otomatik live/sim mode geçişi 60s timeout, threshold + power_cut event üretimi)
+- **PWA**: custom SVG favicon, manifest.json (standalone, start_url=/panel), service worker (cache shell + notification handler)
+- **Browser/PWA push notifications** kritik uyarılarda telefon ekranına bildirim (Notification API + service worker)
+- **IoT Bağlantısı UI**: Settings dialog'da webhook URL, maskeli API key (Göster/Kopyala/Yenile), cURL ve Arduino örneği
+- **Mode badge**: hero ve sidebar'da CANLI IoT vs SİMÜLASYON göstergesi
 
 ## Tested
 - 9/9 backend pytest ✓
