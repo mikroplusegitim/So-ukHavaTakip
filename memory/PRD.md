@@ -1,4 +1,4 @@
-# FrostGuard — Enginar Soğuk Hava Deposu İzleme Sistemi
+# Gurme Enginar — Soğuk Hava Deposu İzleme Sistemi (MikroPlus / Onur S. Alpdoğan)
 
 ## Problem Statement (orijinal)
 > bir soğuk hava deposunda enginar depolucam bana bu deponun sıcaklık ve nemini devamlı kontrol edebilceğim ve birisi şalteri indirip deponun enerjisini kesip elektrikler gidince hemen müşteri telefonuna bildirim göndereceğim bir uygulama yapmak istiyorum şimdi sistemi incele mimarisini kur gerekli gördüğün özellikleri ekle tasarımı mükemmel ve profosyonel olsun müşteri görünce sisteme ihtiyacı olduğunu hissetsin herşeyi sana bırakıyorum şaşırt beni

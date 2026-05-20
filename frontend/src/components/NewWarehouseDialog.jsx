@@ -14,77 +14,40 @@ export default function NewWarehouseDialog({ open, onClose, onCreate }) {
     if (!name.trim() || !location.trim()) return;
     setBusy(true);
     try {
-      await onCreate({
-        name: name.trim(),
-        location: location.trim(),
-        capacity_tons: parseFloat(capacity) || 50,
-        product: "Enginar",
-      });
-      setName("");
-      setLocation("");
-      setCapacity(50);
-      onClose();
-    } finally {
-      setBusy(false);
-    }
+      await onCreate({ name: name.trim(), location: location.trim(), capacity_tons: parseFloat(capacity) || 50, product: "Enginar" });
+      setName(""); setLocation(""); setCapacity(50); onClose();
+    } finally { setBusy(false); }
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-      onClick={onClose}
-      data-testid="new-warehouse-dialog"
-    >
-      <form
-        className="surface w-full max-w-md"
-        onClick={(e) => e.stopPropagation()}
-        onSubmit={submit}
-      >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-4" onClick={onClose} data-testid="new-warehouse-dialog">
+      <form className="glass-strong w-full max-w-md fade-in" onClick={(e) => e.stopPropagation()} onSubmit={submit}>
+        <div className="flex items-center justify-between px-6 py-5 border-b border-[var(--border-soft)]">
           <div>
-            <div className="label-tag">Yeni Soğuk Hava Deposu</div>
-            <div className="font-display text-lg font-bold mt-1">Tesis Tanımla</div>
+            <div className="eyebrow">Yeni Tesis</div>
+            <div className="font-serif-display text-2xl mt-1">
+              Soğuk Hava <span className="font-serif-italic text-[var(--ice)] font-light">Deposu</span>
+            </div>
           </div>
-          <button type="button" onClick={onClose} className="text-[var(--text-dim)] hover:text-white">
-            <X size={20} />
-          </button>
+          <button type="button" onClick={onClose} className="text-[var(--text-dim)] hover:text-white"><X size={22} /></button>
         </div>
-        <div className="p-5 space-y-4">
+        <div className="p-6 space-y-4">
           <div>
-            <div className="label-tag mb-1.5">Depo Adı</div>
-            <input
-              autoFocus
-              className="w-full bg-[var(--surface-2)] border border-[var(--border)] px-3 py-2 font-mono-data text-sm"
-              placeholder="Depo A — Ana Hat"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              data-testid="new-name"
-            />
+            <div className="eyebrow mb-2">Depo Adı</div>
+            <input autoFocus className="frost-input" placeholder="Depo A — Ana Hat" value={name} onChange={(e) => setName(e.target.value)} data-testid="new-name" />
           </div>
           <div>
-            <div className="label-tag mb-1.5">Lokasyon</div>
-            <input
-              className="w-full bg-[var(--surface-2)] border border-[var(--border)] px-3 py-2 font-mono-data text-sm"
-              placeholder="Antalya / Manavgat"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              data-testid="new-location"
-            />
+            <div className="eyebrow mb-2">Lokasyon</div>
+            <input className="frost-input" placeholder="Antalya / Manavgat" value={location} onChange={(e) => setLocation(e.target.value)} data-testid="new-location" />
           </div>
           <div>
-            <div className="label-tag mb-1.5">Kapasite (ton)</div>
-            <input
-              type="number"
-              className="w-full bg-[var(--surface-2)] border border-[var(--border)] px-3 py-2 font-mono-data text-sm"
-              value={capacity}
-              onChange={(e) => setCapacity(e.target.value)}
-              data-testid="new-capacity"
-            />
+            <div className="eyebrow mb-2">Kapasite (ton)</div>
+            <input type="number" className="frost-input" value={capacity} onChange={(e) => setCapacity(e.target.value)} data-testid="new-capacity" />
           </div>
         </div>
-        <div className="flex justify-end gap-2 px-5 py-4 border-t border-[var(--border)]">
-          <button type="button" className="btn-sharp" onClick={onClose}>İptal</button>
-          <button type="submit" disabled={busy} className="btn-sharp btn-primary" data-testid="new-create-btn">
+        <div className="flex justify-end gap-2 px-6 py-4 border-t border-[var(--border-soft)]">
+          <button type="button" className="btn-pill" onClick={onClose}>İptal</button>
+          <button type="submit" disabled={busy} className="btn-pill btn-primary" data-testid="new-create-btn">
             {busy ? "Oluşturuluyor..." : "Oluştur"}
           </button>
         </div>

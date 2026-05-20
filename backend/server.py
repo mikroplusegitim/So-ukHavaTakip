@@ -25,7 +25,7 @@ db = client[os.environ['DB_NAME']]
 
 EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY', '')
 
-app = FastAPI(title="FrostGuard - Soğuk Hava Deposu İzleme")
+app = FastAPI(title="Gurme Enginar - Soğuk Hava Deposu İzleme")
 api_router = APIRouter(prefix="/api")
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -275,7 +275,7 @@ async def seed_warehouses():
 
 @api_router.get("/")
 async def root():
-    return {"app": "FrostGuard", "status": "online", "ts": now_iso()}
+    return {"app": "Gurme Enginar", "status": "online", "ts": now_iso()}
 
 
 @api_router.get("/warehouses", response_model=List[Warehouse])
@@ -443,7 +443,7 @@ Aktif uyarı sayısı: {len(active_alerts)}
     try:
         chat = LlmChat(
             api_key=EMERGENT_LLM_KEY,
-            session_id=f"frostguard-{body.warehouse_id}",
+            session_id=f"gurme-enginar-{body.warehouse_id}",
             system_message=system_msg,
         ).with_model("anthropic", "claude-sonnet-4-5-20250929")
         msg = UserMessage(text=f"Bu depoyu analiz et ve önerilerini madde madde ver:\n\n{summary}")
