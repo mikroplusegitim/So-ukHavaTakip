@@ -1,0 +1,77 @@
+{
+  "theme": "dark",
+  "archetype": "Archetype 4 (Swiss & High-Contrast) modified for Tactical Control Room",
+  "language": "Turkish",
+  "colors": {
+    "background": "#08080C",
+    "surface": "#111116",
+    "surface_secondary": "#1A1A21",
+    "border": "#272730",
+    "primary_accent": "#00E5FF",
+    "critical_alert": "#FF3B30",
+    "warning": "#FFD600",
+    "success": "#00E5FF",
+    "text_primary": "#FFFFFF",
+    "text_secondary": "#A1A1AA"
+  },
+  "typography": {
+    "heading_font": "Chivo",
+    "body_font": "Inter",
+    "mono_font": "JetBrains Mono",
+    "scale": {
+      "h1": "text-4xl sm:text-5xl tracking-tighter",
+      "h2": "text-2xl sm:text-3xl tracking-tight",
+      "h3": "text-xl sm:text-2xl",
+      "h4": "text-lg sm:text-xl",
+      "body": "text-base",
+      "labels": "text-xs uppercase tracking-[0.2em]"
+    },
+    "rules": {
+      "headings": "Use Chivo for all UI headings to project authority. No Inter for headings.",
+      "data": "Use JetBrains Mono for ALL numeric data (temperatures, humidity, timestamps) to look like a NASA terminal."
+    }
+  },
+  "layout_and_spacing": {
+    "strategy": "The 'Control Room' Grid (Mode B)",
+    "container": "Dense, full width grid or max-w-screen-2xl, generous p-6 or p-8 container padding.",
+    "grid": "grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 or gap-6",
+    "cards": "Sharp edges (rounded-none or max rounded-sm). Flat design, NO shadows. Rely on 1px solid borders for definition."
+  },
+  "components": {
+    "surfaces": "GRID BORDERS strategy. Expose the skeleton. Technical look. No gradients. Background must match parent, separated by sharp 1px borders.",
+    "alerts": "High contrast solid blocks for critical errors (e.g. Power Cut = Solid Red background, White text, hard edges).",
+    "charts": "Recharts with JetBrains Mono labels. Use 1px stroke lines. No soft gradient fills beneath lines to maintain Swiss Brutalist aesthetic.",
+    "buttons": "Sharp corners, high contrast. On hover: slight lift (-translate-y-1), text color must remain visible.",
+    "icons": "Use @phosphor-icons/react for dense, industrial-grade iconography."
+  },
+  "media": {
+    "hero_background": {
+      "url": "https://static.prod-images.emergentagent.com/jobs/aa6d620a-5db6-4ad1-bb32-8db4de36fa70/images/4aa2b1e5ab69f632f43c9150a8c40db06645ddf14056e90e67612ed4c000f5cb.png",
+      "description": "Abstract dark mode tech background. Use faintly (10% opacity) behind the main layout or header."
+    },
+    "product_reference": {
+      "url": "https://static.prod-images.emergentagent.com/jobs/aa6d620a-5db6-4ad1-bb32-8db4de36fa70/images/7facc5e61c6aa48c28b8ecccde8552e3365f9839af4608379b19c036cf3551c3.png",
+      "description": "Macro artichoke with frost. Use as an ambient background in the 'AI Insights/Optimum Conditions' bento card with an overlay."
+    },
+    "warehouse_image": {
+      "url": "https://images.pexels.com/photos/36878025/pexels-photo-36878025.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Industrial warehouse interior. Use as a thumbnail for the 'Warehouse Status' selector."
+    }
+  },
+  "features": {
+    "real_time_metrics": "Massive Mono typography for Temp & Humidity. Must dominate the screen visually.",
+    "power_cut_alert": "Persistent, highly visible banner or pulsing neon red element when active.",
+    "multi_warehouse": "Sidebar or top tabs with status dots (Cyan = Online/Cold, Red = Offline/Power Cut).",
+    "ai_insights": "A dedicated AI advice section specifically calculating optimal artichoke storage parameters."
+  },
+  "instructions_to_main_agent": [
+    "Build a single-page dense dashboard using The Control Room Grid.",
+    "Use ONLY Turkish language for all UI text (e.g., 'Depo Sıcaklığı', 'Nem Oranı', 'Elektrik Kesintisi', 'Sistem Devrede').",
+    "Override default Shadcn styles: strip away rounded corners, remove drop shadows, use sharp 1px borders.",
+    "Add data-testid attributes to all interactive elements and metric displays.",
+    "Do NOT use 'Inter' for headings. Do NOT use standard Vercel/Stripe SaaS looks.",
+    "Install and use @phosphor-icons/react.",
+    "Implement Recharts for live data visualization.",
+    "Provide a simulated state toggle for 'Power Outage' to demonstrate the critical alert UI."
+  ]
+}
