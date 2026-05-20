@@ -1,4 +1,5 @@
 import { Plus, Buildings } from "@phosphor-icons/react";
+import ModeBadge from "./ModeBadge";
 
 export default function WarehouseRail({ warehouses, selectedId, onSelect, onAdd }) {
   return (
@@ -34,7 +35,10 @@ export default function WarehouseRail({ warehouses, selectedId, onSelect, onAdd 
                 <span className={w.power_on ? "text-[var(--ice)]" : "text-[var(--red)]"}>
                   {w.power_on ? "● ENERJİ" : "○ KESİK"}
                 </span>
-                <span className="text-[var(--text-mute)]">{w.capacity_tons}T</span>
+                <div className="flex items-center gap-2">
+                  <ModeBadge live={w.live_mode} compact />
+                  <span className="text-[var(--text-mute)]">{w.capacity_tons}T</span>
+                </div>
               </div>
             </button>
           );

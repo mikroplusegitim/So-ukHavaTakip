@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, BackgroundTasks
+from fastapi import FastAPI, APIRouter, HTTPException, BackgroundTasks, Header
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -53,6 +53,10 @@ class Warehouse(BaseModel):
     humidity_min: float = 88.0
     humidity_max: float = 95.0
     power_on: bool = True
+    # IoT integration
+    api_key: str = Field(default_factory=lambda: "ge_" + uuid.uuid4().hex)
+    live_mode: bool = False  # True when real sensor data has been received
+    last_ingest_at: Optional[str] = None
     created_at: str = Field(default_factory=now_iso)
 
 
@@ -229,12 +233,32 @@ async def _check_thresholds_and_alert(wh: dict, reading: dict):
 
 
 async def simulation_loop():
-    """Background loop: generate readings every 4 seconds for all warehouses."""
+    """Background loop: generate readings every 4 seconds for SIMULATION-MODE warehouses only.
+    A warehouse switches to live_mode automatically when real sensor data is ingested via webhook,
+    and reverts to simulation if no data is received for >60 seconds.
+    """
     logger.info("Simülasyon motoru başlatıldı")
+    LIVE_TIMEOUT = 60  # seconds
     while True:
         try:
             warehouses = await db.warehouses.find({}, {"_id": 0}).to_list(1000)
+            now = datetime.now(timezone.utc)
             for wh in warehouses:
+                # Auto-revert to simulation if live feed went silent
+                if wh.get('live_mode') and wh.get('last_ingest_at'):
+                    try:
+                        last = datetime.fromisoformat(wh['last_ingest_at'])
+                        if (now - last).total_seconds() > LIVE_TIMEOUT:
+                            await db.warehouses.update_one({"id": wh['id']}, {"$set": {"live_mode": False}})
+                            wh['live_mode'] = False
+                            logger.info(f"{wh['name']}: canlı IoT bağlantısı kesildi, simülasyona dönüldü")
+                    except Exception:
+                        pass
+
+                # Skip simulation tick for live-mode warehouses
+                if wh.get('live_mode'):
+                    continue
+
                 reading = _next_reading(wh)
                 reading_doc = SensorReading(
                     warehouse_id=wh['id'],
@@ -259,6 +283,12 @@ async def simulation_loop():
 
 
 async def seed_warehouses():
+    # Backfill api_key for existing warehouses that don't have one
+    async for wh in db.warehouses.find({"$or": [{"api_key": {"$exists": False}}, {"api_key": None}]}):
+        new_key = "ge_" + uuid.uuid4().hex
+        await db.warehouses.update_one({"id": wh['id']}, {"$set": {"api_key": new_key, "live_mode": False, "last_ingest_at": None}})
+        logger.info(f"Backfilled api_key for {wh.get('name')}")
+
     count = await db.warehouses.count_documents({})
     if count == 0:
         samples = [
@@ -358,6 +388,94 @@ async def toggle_power(wid: str):
         raise HTTPException(404, "Depo bulunamadı")
     new_state = not wh.get('power_on', True)
     return await update_warehouse(wid, WarehouseUpdate(power_on=new_state))
+
+
+@api_router.post("/warehouses/{wid}/rotate-key")
+async def rotate_api_key(wid: str):
+    """Generate a new API key for the warehouse, invalidating the old one."""
+    wh = await db.warehouses.find_one({"id": wid}, {"_id": 0})
+    if not wh:
+        raise HTTPException(404, "Depo bulunamadı")
+    new_key = "ge_" + uuid.uuid4().hex
+    await db.warehouses.update_one({"id": wid}, {"$set": {"api_key": new_key}})
+    return {"api_key": new_key}
+
+
+class SensorIngest(BaseModel):
+    """Payload accepted from real IoT sensors (ESP32, Raspberry Pi, MQTT bridge, etc.)."""
+    temperature: float
+    humidity: float
+    power_on: Optional[bool] = True
+    api_key: Optional[str] = None  # can also be sent as X-API-Key header
+
+
+@api_router.post("/ingest/{wid}")
+async def ingest_reading(wid: str, body: SensorIngest, x_api_key: Optional[str] = Header(default=None)):
+    """Public webhook endpoint for real IoT sensors.
+
+    Auth via api_key (in body or X-API-Key header). On first valid payload,
+    the warehouse switches from simulation to live mode automatically.
+    """
+    wh = await db.warehouses.find_one({"id": wid}, {"_id": 0})
+    if not wh:
+        raise HTTPException(404, "Depo bulunamadı")
+
+    provided_key = body.api_key or x_api_key
+    if not provided_key or provided_key != wh.get('api_key'):
+        raise HTTPException(401, "Geçersiz API anahtarı")
+
+    # Sanity bounds
+    if not (-40 <= body.temperature <= 60):
+        raise HTTPException(422, "Sıcaklık değeri makul aralık dışında")
+    if not (0 <= body.humidity <= 100):
+        raise HTTPException(422, "Nem değeri 0-100 aralığında olmalı")
+
+    reading = {
+        "temperature": round(float(body.temperature), 2),
+        "humidity": round(float(body.humidity), 1),
+        "power_on": bool(body.power_on),
+    }
+
+    # Mark warehouse as live + persist power state if changed
+    now = now_iso()
+    update_doc = {"live_mode": True, "last_ingest_at": now}
+    if reading['power_on'] != wh.get('power_on', True):
+        update_doc['power_on'] = reading['power_on']
+        # Emit power_cut / power_restored event
+        if reading['power_on']:
+            await db.alerts.insert_one(Alert(
+                warehouse_id=wid, warehouse_name=wh['name'],
+                severity="info", type="power_restored",
+                title="ENERJİ GERİ GELDİ",
+                message=f"{wh['name']} canlı sensörden enerji geri sinyali aldı.",
+            ).model_dump())
+            await db.alerts.update_many(
+                {"warehouse_id": wid, "type": "power_cut", "acknowledged": False},
+                {"$set": {"acknowledged": True}}
+            )
+
+    await db.warehouses.update_one({"id": wid}, {"$set": update_doc})
+
+    # Update local copy used for threshold check
+    wh.update(update_doc)
+
+    # Store reading and check thresholds
+    reading_doc = SensorReading(
+        warehouse_id=wid,
+        temperature=reading['temperature'],
+        humidity=reading['humidity'],
+        power_on=reading['power_on'],
+    ).model_dump()
+    await db.readings.insert_one(reading_doc)
+    # Update in-memory sim state so transition is smooth if live drops out
+    _sim_state[wid] = {
+        "temperature": reading['temperature'],
+        "humidity": reading['humidity'],
+        "drift": 0.0,
+    }
+    await _check_thresholds_and_alert(wh, reading)
+
+    return {"ok": True, "warehouse_id": wid, "ts": now, "mode": "live"}
 
 
 @api_router.get("/alerts", response_model=List[Alert])

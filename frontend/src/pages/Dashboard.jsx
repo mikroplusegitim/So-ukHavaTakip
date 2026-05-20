@@ -5,6 +5,7 @@ import {
   createWarehouse, updateWarehouse, deleteWarehouse,
 } from "@/lib/api";
 import { startAlarm, stopAlarm, chime } from "@/lib/alarm";
+import { requestPermission, notify, getPermission } from "@/lib/notify";
 import { toast } from "sonner";
 import { CircleNotch, Power, Snowflake, Plant, MapPin, Gear } from "@phosphor-icons/react";
 import Header from "@/components/Header";
@@ -18,6 +19,7 @@ import PowerCutOverlay from "@/components/PowerCutOverlay";
 import FrostParticles from "@/components/FrostParticles";
 import CircularGauge from "@/components/CircularGauge";
 import HumidityCard from "@/components/HumidityCard";
+import ModeBadge from "@/components/ModeBadge";
 
 const POLL_MS = 2500;
 
@@ -77,11 +79,26 @@ export default function Dashboard() {
       if (lastCriticalIdRef.current !== activeCritical.id) {
         lastCriticalIdRef.current = activeCritical.id;
         toast.error(activeCritical.title, { description: activeCritical.message, duration: 7000 });
+        // Push browser/PWA notification
+        notify({
+          title: `🚨 ${activeCritical.title}`,
+          body: activeCritical.message,
+          tag: `alert-${activeCritical.warehouse_id}-${activeCritical.type}`,
+        });
       }
     } else if (alarmOn) {
       setAlarmOn(false); stopAlarm(); lastCriticalIdRef.current = null;
     }
   }, [alerts, alarmOn, muted]);
+
+  // Ask for notification permission once
+  const [notifPerm, setNotifPerm] = useState(getPermission());
+  const askNotif = async () => {
+    const p = await requestPermission();
+    setNotifPerm(p);
+    if (p === "granted") toast.success("Bildirim izni verildi", { description: "Kritik uyarılar telefon ekranına gönderilecek" });
+    else toast.error("Bildirim izni reddedildi");
+  };
 
   useEffect(() => () => stopAlarm(), []);
 
@@ -150,6 +167,7 @@ export default function Dashboard() {
 
       <Header
         stats={stats} muted={muted} alarmOn={alarmOn}
+        notifPerm={notifPerm} onAskNotif={askNotif}
         onMuteToggle={handleMuteToggle} onAckAll={handleAckAll}
       />
 
@@ -163,6 +181,7 @@ export default function Dashboard() {
                 <span className="eyebrow">Aktif İzleme</span>
                 <span className="eyebrow text-[var(--text-mute)]">·</span>
                 <span className="eyebrow font-mono-data">{selected.id.slice(0, 8).toUpperCase()}</span>
+                <span className="ml-2"><ModeBadge live={selected.live_mode} /></span>
               </div>
               <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
                 <div>

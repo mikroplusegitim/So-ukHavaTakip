@@ -1,0 +1,38 @@
+{
+  "summary": "Full backend + frontend testing for Gurme Enginar IoT/PWA additions. All 18 pytest tests pass (17 fast + 1 slow auto-revert). New endpoints (POST /api/ingest/{wid}, POST /api/warehouses/{wid}/rotate-key) work; auth via body api_key and X-API-Key header both succeed; wrong key returns 401; out-of-bounds temp/humidity return 422; power_cut/power_restored alerts emitted via ingest with auto-ack of old cuts; threshold violation alerts (temp_high, humidity_high) triggered via ingest; live_mode flips true on ingest, last_ingest_at set, and auto-reverts to simulation after >60s of silence (verified by 70s sleep). PWA static assets all served (/favicon.svg, /manifest.json with start_url '/panel', /sw.js). Frontend Landing -> /panel navigation works; Dashboard renders SİMÜLASYON badge in hero next to id chip; settings dialog shows 'IoT Bağlantısı' with webhook endpoint, masked API key (ge_f61•…•60cb), and Göster/Kopyala/Yenile buttons; rotate-key button actually changes the displayed key (verified ge_f61… -> ge_7bf…); 'Bildirim Aç' button visible in header; service worker successfully registered with scope https://cold-storage-monitor.preview.emergentagent.com/; manifest and favicon links present in <head>.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "WarehouseRail", "issues": ["ModeBadge is rendered with compact=true so the text 'CANLI IoT'/'SİMÜLASYON' is hidden — only a colored dot is shown. Functionally correct but the requirement said 'badge in warehouse rail items'; consider showing at least a tiny label or tooltip for clarity."]},
+      {"screen": "Dashboard LiveChart", "issues": ["Recharts logs 'width(-1) height(-1)' warnings during initial mount — non-blocking but indicates a brief 0-size container before measurement; can be silenced by giving the chart container a min height/width."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_gurme_enginar.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py is now ~610 lines — still readable, but as IoT/AI/CRUD grow it should be split into routers/models/simulation modules.",
+    "POST /api/warehouses/{wid}/rotate-key has no auth — anyone with the warehouse id can rotate the key and lock the real sensor out. Acceptable for an MVP without auth, but flag for the next milestone when auth is added.",
+    "/api/ingest/{wid} accepts api_key in the JSON body — convenient for very-constrained MCUs but logs may capture it. Prefer header-only for production; consider stripping api_key from request logs.",
+    "simulation_loop catches all exceptions then sleeps 4s — good. last_ingest_at parsed with datetime.fromisoformat which works for now_iso() output, but is fragile if a future writer uses a different format; consider storing as native UTC datetime in Mongo.",
+    "ack_alert returns the document only after the $set; if the id doesn't exist it 404s, but does not signal 'already acknowledged' — minor."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_gurme_enginar.py (new)",
+    "/app/backend/tests/test_frostguard.py (deleted — replaced by the new one)"
+  ],
+  "success_rate": {"backend": "100% (18/18)", "frontend": "100% — Landing, /panel navigation, hero ModeBadge, settings IoT section, rotate-key, notif button, SW registration, manifest/favicon all verified"},
+  "test_credentials": "N/A (no auth on app; per-warehouse api_key fetched dynamically from GET /api/warehouses)",
+  "seed_data_creation": "Backend auto-seeds 3 warehouses if collection is empty. Tests created and cleaned up TEST_-prefixed warehouses (TEST_IoT_Power, TEST_IoT_Threshold, TEST_IoT_AutoRevert, TEST_Depo CRUD).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Auto-revert test takes ~70s — run with `pytest -m 'not slow'` to skip during fast runs, or `pytest backend/tests/test_gurme_enginar.py::test_live_mode_auto_reverts` to run it explicitly. Live mode is sticky in DB after a successful ingest — be mindful when chaining tests that rely on simulation generating fresh readings (the test suite already deletes test warehouses after use). REACT_APP_BACKEND_URL is read from /app/frontend/.env at import time via python-dotenv.",
+  "rca of the issue": "No bugs found. The first pytest run failed only because REACT_APP_BACKEND_URL is not exported in the shell — fixed by loading /app/frontend/.env explicitly inside the test module. The previous iteration's test_root assertion (expected 'FrostGuard') would now fail against the renamed 'Gurme Enginar' brand; the rewritten test_gurme_enginar.py asserts the correct app name."
+}

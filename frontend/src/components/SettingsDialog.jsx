@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { X, Trash } from "@phosphor-icons/react";
+import IoTSection from "./IoTSection";
 
 export default function SettingsDialog({ open, onClose, warehouse, onSave, onDelete }) {
   const [form, setForm] = useState(null);
@@ -73,6 +74,9 @@ export default function SettingsDialog({ open, onClose, warehouse, onSave, onDel
               <input type="number" step="0.1" className="frost-input" value={form.humidity_max} onChange={(e) => setForm({ ...form, humidity_max: e.target.value })} />
             </div>
           </Field>
+          <div className="col-span-2">
+            <IoTSection warehouse={warehouse} />
+          </div>
         </div>
         <div className="flex items-center justify-between px-6 py-4 border-t border-[var(--border-soft)]">
           <button className="btn-pill btn-danger" onClick={confirmDelete} data-testid="delete-warehouse-btn">

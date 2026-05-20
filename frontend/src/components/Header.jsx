@@ -1,6 +1,6 @@
-import { Snowflake, BellRinging, BellSlash, CheckCircle } from "@phosphor-icons/react";
+import { Snowflake, BellRinging, BellSlash, CheckCircle, BellSimple } from "@phosphor-icons/react";
 
-export default function Header({ stats, muted, alarmOn, onMuteToggle, onAckAll }) {
+export default function Header({ stats, muted, alarmOn, notifPerm, onAskNotif, onMuteToggle, onAckAll }) {
   return (
     <header className="sticky top-0 z-30 px-4 sm:px-6 lg:px-10 pt-5 pb-2 relative">
       <div className="glass max-w-screen-2xl mx-auto px-5 py-3 flex items-center justify-between gap-4">
@@ -24,6 +24,16 @@ export default function Header({ stats, muted, alarmOn, onMuteToggle, onAckAll }
         </div>
 
         <div className="flex items-center gap-2">
+          {notifPerm !== "granted" && (
+            <button
+              className="btn-pill !py-2 !px-3"
+              onClick={onAskNotif}
+              data-testid="enable-notif-btn"
+              title="Telefon bildirimlerini aç"
+            >
+              <BellSimple size={14} /> <span className="hidden sm:inline">Bildirim Aç</span>
+            </button>
+          )}
           <button className="btn-pill !py-2 !px-3" onClick={onMuteToggle} data-testid="mute-toggle-btn" title={muted ? "Sesi aç" : "Sesi kapat"}>
             {muted ? <BellSlash size={14} /> : <BellRinging size={14} className={alarmOn ? "text-[var(--red)]" : ""} />}
           </button>
