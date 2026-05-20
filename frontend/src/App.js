@@ -1,5 +1,6 @@
 import "@/App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Landing from "@/pages/Landing";
 import Dashboard from "@/pages/Dashboard";
 import { Toaster } from "sonner";
 
@@ -8,7 +9,8 @@ function App() {
     <div className="App">
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/" element={<Landing />} />
+          <Route path="/panel" element={<Dashboard />} />
         </Routes>
       </BrowserRouter>
       <Toaster
