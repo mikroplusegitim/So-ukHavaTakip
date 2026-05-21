@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: gurme-enginar-api
+    runtime: python
+    region: frankfurt          # Türkiye için en yakın bölge
+    plan: free                 # ücretsiz katman
+    rootDir: backend
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: MONGO_URL
+        sync: false           # Render UI'dan elle girilecek (güvenli)
+      - key: DB_NAME
+        value: gurme_enginar
+      - key: CORS_ORIGINS
+        sync: false           # Netlify URL'inizi UI'dan girin
+      - key: EMERGENT_LLM_KEY
+        sync: false           # Universal LLM key — UI'dan girin
